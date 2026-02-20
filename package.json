@@ -1,0 +1,25 @@
+{
+  "name": "@veoci-labs/veoci-ticket-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Veoci dev ticket operations",
+  "type": "module",
+  "bin": {
+    "veoci-ticket-mcp": "build/index.js"
+  },
+  "files": ["build"],
+  "scripts": {
+    "build": "tsc && chmod +x build/index.js",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
