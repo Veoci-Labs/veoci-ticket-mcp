@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const BASE_URL = process.env.VEOCI_BASE_URL || "https://veoci.com/api/v2";
@@ -24,31 +24,59 @@ export class VeociClient {
       return this.patCache;
     }
 
+    // Search known directories for .design-toolkit/.env
     const searchDirs = [
       process.env.WORKSPACE,
       process.cwd(),
       process.env.HOME,
     ].filter(Boolean) as string[];
 
-    for (const dir of searchDirs) {
+    const pat = await this.findPatInDirs(searchDirs);
+    if (pat) {
+      this.patCache = pat;
+      return pat;
+    }
+
+    // Cowork: scan mounted workspaces at $HOME/mnt/*/
+    const home = process.env.HOME;
+    if (home) {
+      const mntDir = join(home, "mnt");
       try {
-        const envPath = join(dir, ".design-toolkit", ".env");
-        const contents = await readFile(envPath, "utf-8");
-        for (const line of contents.split("\n")) {
-          const match = line.match(/^VEOCI_PAT=(.+)$/);
-          if (match) {
-            this.patCache = match[1].trim();
-            return this.patCache;
-          }
+        const entries = await readdir(mntDir, { withFileTypes: true });
+        const mntDirs = entries
+          .filter((e) => e.isDirectory())
+          .map((e) => join(mntDir, e.name));
+        const mntPat = await this.findPatInDirs(mntDirs);
+        if (mntPat) {
+          this.patCache = mntPat;
+          return mntPat;
         }
       } catch {
-        // File not found or unreadable - try next
+        // mnt dir doesn't exist - not in Cowork
       }
     }
 
     throw new Error(
       "No VEOCI_PAT found. Set VEOCI_PAT env var or place it in .design-toolkit/.env"
     );
+  }
+
+  private async findPatInDirs(dirs: string[]): Promise<string | null> {
+    for (const dir of dirs) {
+      try {
+        const envPath = join(dir, ".design-toolkit", ".env");
+        const contents = await readFile(envPath, "utf-8");
+        for (const line of contents.split("\n")) {
+          const match = line.match(/^VEOCI_PAT=(.+)$/);
+          if (match) {
+            return match[1].trim();
+          }
+        }
+      } catch {
+        // File not found or unreadable - try next
+      }
+    }
+    return null;
   }
 
   private async request(path: string, options: RequestInit = {}): Promise<Response> {

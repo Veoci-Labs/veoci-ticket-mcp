@@ -6,7 +6,7 @@ import { registerTools } from "./tools.js";
 
 const server = new McpServer({
   name: "veoci-ticket-mcp",
-  version: "0.1.2",
+  version: "0.1.3",
 });
 
 const client = new VeociClient();
