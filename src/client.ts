@@ -24,10 +24,15 @@ export class VeociClient {
       return this.patCache;
     }
 
-    const workspace = process.env.WORKSPACE;
-    if (workspace) {
+    const searchDirs = [
+      process.env.WORKSPACE,
+      process.cwd(),
+      process.env.HOME,
+    ].filter(Boolean) as string[];
+
+    for (const dir of searchDirs) {
       try {
-        const envPath = join(workspace, ".design-toolkit", ".env");
+        const envPath = join(dir, ".design-toolkit", ".env");
         const contents = await readFile(envPath, "utf-8");
         for (const line of contents.split("\n")) {
           const match = line.match(/^VEOCI_PAT=(.+)$/);
@@ -37,12 +42,12 @@ export class VeociClient {
           }
         }
       } catch {
-        // File not found or unreadable - fall through
+        // File not found or unreadable - try next
       }
     }
 
     throw new Error(
-      "No VEOCI_PAT found. Set VEOCI_PAT env var or place it in $WORKSPACE/.design-toolkit/.env"
+      "No VEOCI_PAT found. Set VEOCI_PAT env var or place it in .design-toolkit/.env"
     );
   }
 
