@@ -64,13 +64,34 @@ export class VeociClient {
 
   async lookupTicket(ticketNumber: string): Promise<string> {
     const filters = JSON.stringify({
-      advancedFilters: [
-        {
-          c: "custom_27",
-          o: "is",
-          v: ticketNumber,
+      aggregates: [],
+      columns: [],
+      filters: {
+        advancedFilters: {
+          anyAll: "all",
+          displayFilters: [],
+          filters: [
+            {
+              columnId: "custom_27",
+              condition: "equals",
+              type: "text",
+              value: {
+                type: "text",
+                value: ticketNumber,
+              },
+            },
+          ],
+          type: "advanced",
+          highlightDisplay: "classic",
         },
-      ],
+      },
+      searchString: "",
+      showExactDates: true,
+      sortCol: "lastModified",
+      sortDir: false,
+      bypassSqlTable: false,
+      groupBySort: "alphaAsc",
+      bypassArchiving: true,
     });
 
     const params = new URLSearchParams({
